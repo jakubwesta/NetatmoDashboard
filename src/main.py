@@ -1,20 +1,34 @@
+import sys
+import os
+from PyQt6.QtWidgets import QApplication
 from database.database import DbManager, Weather
-from api.api_integration import User
+from api.api_integration import User, get_station_data
+from gui.dashboard import DashboardWindow
 
 
 def main():
     initialize()
-    #data = get_station_data(ACCESS_TOKEN)
-    #DbManager.add_weather(Weather(data))
+    #DbManager.add_weather(Weather(get_station_data(User.USER.access_token)))
+
+    app = QApplication(sys.argv)
+
+    window = DashboardWindow()
+    window.show()
+
+    app.exec()
 
 
-# Checks if all necessary files exists
 def initialize():
+    # Adds project folder to path to allow imports for sub-folders
+    project_folder = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(project_folder)
+
     DbManager.initialize()
-    user = User.load()
-    print(user.access_token)
-    print(user.refresh_token)
-    print(user.authenticated)
+    User.load()
+
+    print(User.USER.access_token)
+    print(User.USER.refresh_token)
+    print(User.USER.is_authenticated)
 
 
 if __name__ == "__main__":

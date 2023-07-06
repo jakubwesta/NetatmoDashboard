@@ -1,32 +1,38 @@
 import os
 import json
 import threading
+import time
 from http.client import HTTPSConnection
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# App details
+# App details, statics
 CLIENT_ID = "649d60d3998f0adad30ce53e"
 CLIENT_SECRET = "TumbK6X1YW42PmsnM8GqnO5hkluOY2ef56fVsB"
 REDIRECT_URI = "http://localhost:8080/auth/callback"
 SCOPE = "read_station"
 STATE = "NetatmoDashboardState"
 SERVER_ADDRESS = ("localhost", 8080)
-
-# Local user file
 USER_FILE = "user_data.json"
 
 
 class User:
-    def __init__(self, access_token=None, refresh_token=None, new=False):
+    USER = None  # Should be used in other places as current user
+
+    def __init__(self, access_token=None, refresh_token=None, expiration_time=None, new=False):
         self.access_token = access_token
         self.refresh_token = refresh_token
-        self.authenticated = True
+        self.expiration_time = expiration_time
+        self.is_authenticated = True
         if new:
-            self.authenticated = False
+            self.is_authenticated = False
             self.authenticate()
+        elif self.expiration_time < time.time():
+            self.refresh()
         self.save()
+        User.USER = self
 
+    # Should be used to create new user or load existing one, if there is one
     @classmethod
     def load(cls):
         if os.path.exists(USER_FILE):
@@ -34,33 +40,32 @@ class User:
                 data = json.load(file)
                 access_token = data.get("access_token")
                 refresh_token = data.get("refresh_token")
-                if (refresh_token is not None) and (access_token is not None):
-                    return cls(access_token, refresh_token)
-                else:
-                    return cls(new=True)
-        else:
-            return cls(new=True)
+                expiration_time = data.get("expiration_time")
+                if (refresh_token is not None) and (access_token is not None) and (expiration_time is not None):
+                    return cls(access_token, refresh_token, expiration_time)
+        return cls(new=True)
 
+    # Saves user's data to json file
     def save(self):
         data = {
             "access_token": self.access_token,
-            "refresh_token": self.refresh_token
+            "refresh_token": self.refresh_token,
+            "expiration_time": self.expiration_time
         }
         with open(USER_FILE, "w") as file:
-            json.dump(data, file)
-
-    def authenticate(self):
-        self.authenticate_1()
+            json.dump(data, file, indent=4)
 
     # First part of authentication
     # Sends user to netatmo's website to confirm access for app
-    def authenticate_1(self):
+    # Continuation (if successful) in authentication_2
+    def authenticate(self):
         conn = HTTPSConnection("api.netatmo.com")
         payload = ""
         headers = {}
 
         # Starts local server to handle GET request
         server = HTTPServer(SERVER_ADDRESS, lambda *args, **kwargs: CallbackHandler(self, *args, **kwargs))
+
         server.user_event = threading.Event()
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
@@ -78,7 +83,7 @@ class User:
 
     # Second part of authentication
     # Extracts code from api request, and sets tokens for user
-    def authenticate_2(self, authorization_code):
+    def authenticate_code(self, authorization_code):
         # Retrieves the access token with the authorization code
         conn = HTTPSConnection("api.netatmo.com")
         payload = f"grant_type=authorization_code&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&code={authorization_code}&redirect_uri={REDIRECT_URI}&scope={SCOPE}"
@@ -91,11 +96,12 @@ class User:
         if "access_token" in response_json:
             self.access_token = response_json["access_token"]
             self.refresh_token = response_json["refresh_token"]
-            self.authenticated = True
+            self.expiration_time = int(time.time()) + response_json["expires_in"]
+            self.is_authenticated = True
             self.save()
             print("Authentication successful!")
         else:
-            self.authenticated = False
+            self.is_authenticated = False
             error = response_json["error"]
             print(f"Authentication failed: {error}")
 
@@ -116,6 +122,7 @@ class User:
         if "access_token" in response_json:
             self.access_token = response_json["access_token"]
             self.refresh_token = response_json["refresh_token"]
+            self.expiration_time = int(time.time()) + response_json["expires_in"]
             self.save()
             print("Token Refreshed successfully!")
         else:
@@ -147,8 +154,8 @@ class CallbackHandler(BaseHTTPRequestHandler):
 
         if "code" in query_params:
             authorization_code = query_params["code"][0]
-            self.user.authenticate_2(authorization_code)
-            self.user.authenticated = True
+            self.user.authenticate_code(authorization_code)
+            self.user.is_authenticated = True
 
             self.send_response(200)
             self.send_header("Content-type", "text/html")

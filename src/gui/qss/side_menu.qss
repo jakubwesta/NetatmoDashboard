@@ -1,0 +1,19 @@
+SideMenu {
+    background-color: #90E0EF;
+}
+QPushButton {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    text-align: left;
+    color: #3a4e7a;
+    padding: 10px;
+    font-family: 'Open Sans';
+    font-weight: 400;
+    font-size: 20px;
+}
+QPushButton:hover {
+    color: #ff8000;
+}
+QPushButton:pressed {
+    color: #ff8000;
+}

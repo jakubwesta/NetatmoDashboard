@@ -1,0 +1,6 @@
+MainWeatherMenu {
+    background-color: darkgoldenrod;
+}
+#location {
+    background-color: red;
+}
