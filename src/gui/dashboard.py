@@ -2,7 +2,7 @@ import os.path as path
 import numpy as np
 import pyqtgraph as pg
 from PyQt6.QtCore import Qt, QStringListModel
-from PyQt6.QtGui import QPainter
+from PyQt6.QtGui import QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QGridLayout
 )
 
+from src.settings import PROJECT_PATH
 from src.stats import Stat
 
 WINDOW_SIZE_X = 1400
@@ -51,11 +52,13 @@ class DashboardWindow(QMainWindow):
 class AreaWidget(QWidget):
     qss_path = path.join(path.dirname(path.abspath(__file__)), "qss")
 
-    def __init__(self, stylesheet):
+    # name is a lowercase string that will be object name and a stylesheet file
+    def __init__(self, name):
         super().__init__()
-        with open(path.join(AreaWidget.qss_path, stylesheet), "r") as stylesheet_file:
-            self.setStyleSheet(stylesheet_file.read())
+        self.setObjectName(name)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        with open(path.join(AreaWidget.qss_path, name + ".qss"), "r") as stylesheet_file:
+            self.setStyleSheet(stylesheet_file.read())
 
     # Based on Qt docs, required for custom widgets to render properly, background won't load without it
     def paintEvent(self, event):
@@ -67,7 +70,7 @@ class AreaWidget(QWidget):
 
 class SideMenu(AreaWidget):
     def __init__(self):
-        super().__init__("side_menu.qss")
+        super().__init__("side_menu")
         self.layout = QVBoxLayout()
         self.layout.setSpacing(10)
         self.layout.setContentsMargins(20, 10, 20, 10)
@@ -83,7 +86,7 @@ class SideMenu(AreaWidget):
 
 class SideWeatherMenu(AreaWidget):
     def __init__(self):
-        super().__init__("side_weather_menu.qss")
+        super().__init__("side_weather_menu")
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -134,7 +137,7 @@ class SideWeatherMenu(AreaWidget):
 
 class MainWeatherMenu(AreaWidget):
     def __init__(self):
-        super().__init__("main_weather_menu.qss")
+        super().__init__("main_weather_menu")
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -210,20 +213,29 @@ class MainWeatherMenu(AreaWidget):
 
 
 class StatButton(QPushButton):
-    def __init__(self, stat):
+    # icon is an optional file name, in assets/icons/, for example rain.png
+    def __init__(self, stat, icon=None):
         super().__init__()
         self.setObjectName(stat.label.lower())
         self.layout = QHBoxLayout(self)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
+        icon_label = QLabel()
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        if icon is not None:
+            icon_label.setPixmap(QPixmap(path.join(PROJECT_PATH, "assets", "icons", icon)).scaled(16, 16))
+
         stat_box = QVBoxLayout()
-        stat_value_label = QLabel(stat.append_unit(21)) # todo
+        stat_box.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        stat_value_label = QLabel(stat.append_unit(21))  # todo
         stat_name_label = QLabel(stat.label)
         stat_box.addWidget(stat_value_label)
         stat_box.addWidget(stat_name_label)
 
+        self.layout.addWidget(icon_label)
         self.layout.addLayout(stat_box)
 
 

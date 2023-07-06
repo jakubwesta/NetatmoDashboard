@@ -126,8 +126,7 @@ class User:
             print("Token Refreshed successfully!")
         else:
             error = response_json["error"]
-            error_description = response_json["error_description"]
-            print(f"Token Refresh failed: {error} - {error_description}")
+            print(f"Token Refresh failed: {error}")
 
 
 # Class for handling confirmation request from netatmo API

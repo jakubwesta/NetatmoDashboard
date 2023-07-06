@@ -1,5 +1,5 @@
 import sys
-import os
+from settings import SRC_PATH
 from PyQt6.QtWidgets import QApplication
 from database.database import DbManager, Weather
 from api.api_integration import User, get_station_data
@@ -19,9 +19,7 @@ def main():
 
 
 def initialize():
-    # Adds project folder to path to allow imports for sub-folders
-    project_folder = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(project_folder)
+    sys.path.append(SRC_PATH) # Adds project folder to path to allow imports for sub-folders
 
     DbManager.initialize()
     User.load()

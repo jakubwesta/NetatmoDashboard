@@ -2,6 +2,7 @@ import datetime
 import os.path as path
 from sqlalchemy import Column, Integer, Float, DateTime, create_engine, MetaData
 from sqlalchemy.orm import relationship, Session, DeclarativeBase
+from src.settings import PROJECT_PATH
 
 
 class Base(DeclarativeBase):
@@ -89,7 +90,7 @@ class DbManager:
 
     @classmethod
     def initialize(cls):
-        db_path = path.join(path.dirname(path.abspath(__file__)), "db.sqlite")
+        db_path = path.join(PROJECT_PATH, "db.sqlite")
         engine = create_engine(f"sqlite:///{db_path}", echo=True)
         cls.session = Session(engine)
         Base.metadata.create_all(engine)
