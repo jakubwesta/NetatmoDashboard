@@ -1,8 +1,9 @@
 import os.path as path
-from PyQt6.QtCore import QSize, Qt, QPoint, QStringListModel
-from PyQt6.QtGui import QPalette, QColor, QPainter
+import numpy as np
+import pyqtgraph as pg
+from PyQt6.QtCore import Qt, QStringListModel
+from PyQt6.QtGui import QPainter
 from PyQt6.QtWidgets import (
-    QApplication,
     QMainWindow,
     QPushButton,
     QVBoxLayout,
@@ -10,14 +11,13 @@ from PyQt6.QtWidgets import (
     QWidget,
     QSizePolicy,
     QStyleOption,
-    QStyle, QLayout, QLabel, QLineEdit, QCompleter, QGridLayout
+    QStyle,
+    QLabel,
+    QLineEdit,
+    QCompleter,
+    QGridLayout
 )
-from PyQt6 import QtGui, QtCore
-from pyqtgraph import PlotWidget, PlotItem, FillBetweenItem, ColorMap, mkPen
-from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
-from scipy.interpolate import make_interp_spline
-import pyqtgraph as pg
-import numpy as np
+
 from src.stats import Stat
 
 WINDOW_SIZE_X = 1400

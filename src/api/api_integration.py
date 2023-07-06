@@ -5,11 +5,10 @@ import time
 from http.client import HTTPSConnection
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from src.util import get_app_data
 
 # App details, statics
-CLIENT_ID = "649d60d3998f0adad30ce53e"
-CLIENT_SECRET = "TumbK6X1YW42PmsnM8GqnO5hkluOY2ef56fVsB"
-REDIRECT_URI = "http://localhost:8080/auth/callback"
+CLIENT_ID, CLIENT_SECRET, REDIRECT_URI = get_app_data() # Sensitive data, saved in gitignored .json
 SCOPE = "read_station"
 STATE = "NetatmoDashboardState"
 SERVER_ADDRESS = ("localhost", 8080)
