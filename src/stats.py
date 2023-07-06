@@ -9,6 +9,8 @@ class Stat(Enum):
     PRESSURE = "hPa"
     RAIN = "mm"
     WIND = "km/h"
+    SUNRISE = ""
+    SUNSET = ""
 
     def append_unit(self, value):
         return str(value) + " " + self.unit

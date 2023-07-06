@@ -12,6 +12,12 @@ from PyQt6.QtWidgets import (
     QStyleOption,
     QStyle, QLayout, QLabel, QLineEdit, QCompleter, QGridLayout
 )
+from PyQt6 import QtGui, QtCore
+from pyqtgraph import PlotWidget, PlotItem, FillBetweenItem, ColorMap, mkPen
+from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
+from scipy.interpolate import make_interp_spline
+import pyqtgraph as pg
+import numpy as np
 from src.stats import Stat
 
 WINDOW_SIZE_X = 1400
@@ -81,8 +87,49 @@ class SideWeatherMenu(AreaWidget):
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
         self.setFixedWidth(400)
+
+        # Top part, Date, hour and station location
+        top_box = QHBoxLayout()
+        top_box.setAlignment(Qt.AlignmentFlag.AlignTop)
+        date_hour_box = QVBoxLayout()
+        hour_label = QLabel("18:27")
+        date_label = QLabel("Thursday, July 6, 2023")
+        date_hour_box.addWidget(hour_label)
+        date_hour_box.addWidget(date_label)
+        location_label = QLabel("Rumia")
+        top_box.addLayout(date_hour_box)
+        top_box.addWidget(location_label)
+
+        # Middle part, modules battery levels
+        modules_battery_label = QLabel("Modules battery")
+        modules_battery_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        modules_battery_box = QVBoxLayout()
+        modules_battery_box.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+
+
+
+
+        # Bottom part, sunrise and sunset
+        sun_label = QLabel("Sunrise and sunset")
+        sun_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        sun_box = QVBoxLayout()
+        sun_box.setAlignment(Qt.AlignmentFlag.AlignTop)
+        sunrise_button = StatButton(Stat.SUNRISE)
+        sunset_button = StatButton(Stat.SUNSET)
+        sun_box.addWidget(sunrise_button)
+        sun_box.addWidget(sunset_button)
+
+        self.layout.addLayout(top_box)
+        self.layout.addWidget(modules_battery_label)
+        self.layout.addLayout(modules_battery_box)
+        self.layout.addWidget(sun_label)
+        self.layout.addLayout(sun_box)
+
+
 
 
 class MainWeatherMenu(AreaWidget):
@@ -91,6 +138,7 @@ class MainWeatherMenu(AreaWidget):
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
         self.setMinimumWidth(800)
 
@@ -99,9 +147,6 @@ class MainWeatherMenu(AreaWidget):
         location_bar.setAlignment(Qt.AlignmentFlag.AlignTop)
         location_bar.setContentsMargins(5, 5, 5, 5)
         location_bar.setSpacing(2)
-        location_bar_widget = QWidget()
-        location_bar_widget.setObjectName("location")
-        location_bar_widget.setLayout(location_bar)
 
         # Current location, top left corner
         location_box = QVBoxLayout()
@@ -132,6 +177,7 @@ class MainWeatherMenu(AreaWidget):
         # Current overview, middle section
         overview_label = QLabel("Current overview")
         overview_box = QGridLayout()
+        overview_box.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Dict with overview buttons_name: (x, y) pos
         overview_items = {
@@ -146,11 +192,15 @@ class MainWeatherMenu(AreaWidget):
             overview_box.addWidget(StatButton(key), *value)
 
 
-        self.layout.addWidget(location_bar_widget)
+        # Plot with recent data at the bottom
+        plot_label = QLabel("... plot")
+        plot = StatPlot()
+
+        self.layout.addLayout(location_bar)
         self.layout.addWidget(overview_label)
         self.layout.addLayout(overview_box)
-
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.addWidget(plot_label)
+        self.layout.addWidget(plot)
 
     def location_search_button_action(self):
         pass
@@ -175,6 +225,22 @@ class StatButton(QPushButton):
         stat_box.addWidget(stat_name_label)
 
         self.layout.addLayout(stat_box)
+
+
+class StatPlot(pg.PlotWidget):
+    def __init__(self):
+        super().__init__()
+
+        # Generate some sample data
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x)
+
+        # Create the curve item
+        curve = pg.PlotDataItem(x, y, pen='b')
+        self.addItem(curve)
+
+
+
 
 
 """

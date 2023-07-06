@@ -8,6 +8,8 @@ pyqt6 = "*"
 sqlalchemy = "*"
 pyqtgraph = "*"
 geopy = "*"
+numpy = "*"
+scipy = "*"
 
 [dev-packages]
 
